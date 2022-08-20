@@ -51,7 +51,7 @@ def get_s3_data(context) -> List[Stock]:
 
 
 @op
-def process_data():
+def process_data(stocks: List[Stock]) -> Aggregation:
     pass
 
 
