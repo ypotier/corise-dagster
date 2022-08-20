@@ -56,8 +56,8 @@ def process_data():
 
 
 @op
-def put_redis_data():
-    pass
+def put_redis_data(my_agg: Aggregation):
+    print(my_agg)
 
 
 @job
