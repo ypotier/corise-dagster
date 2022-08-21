@@ -52,7 +52,10 @@ def get_s3_data(context) -> List[Stock]:
 
 @op
 def process_data(stocks: List[Stock]) -> Aggregation:
-    pass
+    #take the list of stocks and determine the Stock with the greatest high value
+    #Stock(date=datetime(2022, 1, 1, 0, 0), close=7.0, volume=12, open=7.0, high=10.0, low=6.0)
+    max_stock = max(stocks, key=lambda stock: stock.high)
+    return Aggregation(max_stock.date, max_stock.high)
 
 
 @op
