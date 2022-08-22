@@ -59,8 +59,8 @@ def process_data(stocks: List[Stock]) -> Aggregation:
 
 
 @op
-def put_redis_data(my_agg: Aggregation):
-    print(my_agg)
+def put_redis_data(context, my_agg: Aggregation):
+    context.log.info(f"My Aggregation: {my_agg}")
 
 
 @job
