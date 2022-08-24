@@ -60,16 +60,23 @@ def get_s3_data(context):
     return output
 
 
-@op
+@op(
+    config_schema={"nlargest": int},
+    ins={"stocks": In(dagster_type=List[Stock])},
+    out=DynamicOut(dagster_type = Aggregation),
+    description="Given a list of stocks return the Aggregation with the greatest high value"
+)
 def process_data():
     pass
 
 
 @op
-def put_redis_data():
-    pass
+def put_redis_data(context, my_agg: Aggregation):
+    context.log.info(f"My Aggreggation: {my_agg=}")
 
 
 @job
 def week_1_pipeline():
-    pass
+    stocks = get_s3_data()
+    my_agg = process_data(stocks)
+    put_redis_data(my_agg)
