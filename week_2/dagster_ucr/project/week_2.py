@@ -31,7 +31,7 @@ def process_data(stocks):
 
 
 @op(
-    ins={"aggregation": In(dagster_type=Aggregation)},
+    ins={"my_agg": In(dagster_type=Aggregation)},
     required_resource_keys={"redis"},
     tags={"kind": "redis"},
     description="Save data to Redis",
