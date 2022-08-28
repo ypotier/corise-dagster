@@ -8,30 +8,37 @@ from dagster_ucr.resources import mock_s3_resource, redis_resource, s3_resource
 @op(
     config_schema={"s3_key": str},
     out={"stocks": Out(dagster_type=List[Stock])},
+    required_resource_keys={"s3"},
     tags={"kind": "s3"},
     description="Get a list of stocks from an S3 file",
 )
-def get_s3_data(context) -> List[Stock]:
-    output = list()
-    with open(context.op_config["s3_key"]) as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            stock = Stock.from_list(row)
-            output.append(stock)
-    return output
+def get_s3_data(context):
+    s3 = context.resources.s3
+    stocks = s3.get_data(context.op_config["s3_key"])
+    return [Stock.from_list(stock) for stock in stocks]
 
 
-@op
-def process_data(stocks: List[Stock]) -> Aggregation:
-    #take the list of stocks and determine the Stock with the greatest high value
+@op(
+    ins={"stocks": In(dagster_type=List[Stock])},
+    out={"aggregation": Out(dagster_type=Aggregation)},
+    tags={"kind": "python"},
+    description="Take the list of stocks and determine the Stock with the greatest high value",
+)
+def process_data(stocks):
     #Stock(date=datetime(2022, 1, 1, 0, 0), close=7.0, volume=12, open=7.0, high=10.0, low=6.0)
-    max_stock = max(stocks, key=lambda stock: stock.high)
+    max_stock = sorted(stocks, key=lambda x: x.high, reverse=True)[0]
     return Aggregation(date=max_stock.date, high=max_stock.high)
 
 
-@op
-def put_redis_data(my_agg: Aggregation):
-    print(f"My Aggregation: {my_agg}")
+@op(
+    ins={"aggregation": In(dagster_type=Aggregation)},
+    required_resource_keys={"redis"},
+    tags={"kind": "redis"},
+    description="Save data to Redis",
+)
+def put_redis_data(context, my_agg):
+    redis = context.resources.redis
+    redis.put_data(str(my_agg.date), str(my_agg.high))
 
 
 @graph
