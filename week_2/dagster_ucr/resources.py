@@ -91,10 +91,23 @@ def mock_s3_resource():
     return s3_mock
 
 
-@resource
-def s3_resource():
+@resource(
+    config_schema={
+        "bucket": Field(String),
+        "access_key": Field(String),
+        "secret_key": Field(String),
+        "endpoint_url": Field(String, is_required=False),
+    },
+    description="A resource that can run S3",
+)
+def s3_resource(context) -> S3:
     """This resource defines a S3 client"""
-    pass
+    return S3(
+        bucket=context.resource_config["bucket"],
+        access_key=context.resource_config["access_key"],
+        secret_key=context.resource_config["secret_key"],
+        endpoint_url=context.resource_config.get("endpoint_url"),
+    )
 
 
 @resource
