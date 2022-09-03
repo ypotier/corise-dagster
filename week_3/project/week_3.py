@@ -33,16 +33,26 @@ def get_s3_data(context):
     return stocks
 
 
-@op
-def process_data():
-    # Use your ops from week 2
-    pass
+@op(
+    ins={"stocks": In(dagster_type=List[Stock])},
+    out=Out(dagster_type=Aggregation),
+    tags={"kind": "python"},
+    description="Get an aggregation of the highest stock",
+)
+def process_data(stocks: List[Stock]) -> Aggregation:
+    max_stock = max(stocks, key=lambda stock: stock.high)
+    return Aggregation(date=max_stock.date, high=max_stock.high)
 
 
-@op
-def put_redis_data():
-    # Use your ops from week 2
-    pass
+@op(
+    required_resource_keys={"redis"},
+    ins={"max_stock": In(dagster_type=Aggregation)},
+    out=Out(dagster_type=Nothing),
+    tags={"kind": "redis"},
+    description="Save data to Redis",
+)
+def put_redis_data(context, max_stock: Aggregation):
+    context.resources.redis.put_data(str(max_stock.date), str(max_stock.high))
 
 
 @graph
