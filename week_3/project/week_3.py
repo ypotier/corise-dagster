@@ -19,10 +19,18 @@ from project.sensors import get_s3_keys
 from project.types import Aggregation, Stock
 
 
-@op
-def get_s3_data():
-    # Use your ops from week 2
-    pass
+@op(
+    config_schema={"s3_key": str},
+    required_resource_keys={"s3"},
+    out={"stocks": Out(dagster_type=List[Stock])},
+    tags={"kind": "s3"},
+    description="Get a list of stocks from an S3 file",
+)
+def get_s3_data(context):
+    stocks = []
+    for stock in context.resources.s3.get_data(context.op_config["s3_key"]):
+        stocks.append(Stock.from_list(stock))
+    return stocks
 
 
 @op
