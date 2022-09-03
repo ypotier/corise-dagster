@@ -57,8 +57,9 @@ def put_redis_data(context, max_stock: Aggregation):
 
 @graph
 def week_3_pipeline():
-    # Use your graph from week 2
-    pass
+    stocks = get_s3_data()
+    my_agg = process_data(stocks)
+    put_redis_data(my_agg)
 
 
 local = {
