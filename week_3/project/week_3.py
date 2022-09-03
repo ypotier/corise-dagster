@@ -87,9 +87,12 @@ docker = {
     "ops": {"get_s3_data": {"config": {"s3_key": "prefix/stock_9.csv"}}},
 }
 
-
-def docker_config():
-    pass
+@static_partitioned_config(partition_keys=[str(num) for num in range(1, 11)])
+def docker_config(partition_key: str):
+    return {
+        **docker,
+        "ops": {"get_s3_data": {"config": {"s3_key": f"prefix/stock_{partition_key}.csv"}}},
+    }
 
 
 local_week_3_pipeline = week_3_pipeline.to_job(
@@ -99,6 +102,7 @@ local_week_3_pipeline = week_3_pipeline.to_job(
         "s3": mock_s3_resource,
         "redis": ResourceDefinition.mock_resource(),
     },
+    op_retry_policy=RetryPolicy(max_retries=10, delay=1),
 )
 
 docker_week_3_pipeline = week_3_pipeline.to_job(
@@ -111,10 +115,15 @@ docker_week_3_pipeline = week_3_pipeline.to_job(
 )
 
 
-local_week_3_schedule = None  # Add your schedule
+local_week_3_schedule = ScheduleDefinition(
+    job=local_week_3_pipeline,
+    cron_schedule="*/15 * * * *",
+)
 
-docker_week_3_schedule = None  # Add your schedule
-
+docker_week_3_schedule = ScheduleDefinition(
+    job=docker_week_3_pipeline,
+    cron_schedule="0 * * * *",
+)
 
 @sensor
 def docker_week_3_sensor():
