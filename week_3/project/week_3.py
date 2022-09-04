@@ -89,10 +89,10 @@ docker = {
 
 @static_partitioned_config(partition_keys=[str(num) for num in range(1, 11)])
 def docker_config(partition_key: str):
-    return {
-        **docker,
-        "ops": {"get_s3_data": {"config": {"s3_key": f"prefix/stock_{partition_key}.csv"}}},
-    }
+    update_docker_ops = docker
+    update_docker_ops["ops"]["get_s3_data"]["config"][
+        "s3_key"] = f"prefix/stock_{partition_key}.csv"
+    return update_docker_ops
 
 
 local_week_3_pipeline = week_3_pipeline.to_job(
