@@ -5,10 +5,20 @@ from project.resources import redis_resource, s3_resource
 from project.types import Aggregation, Stock
 
 
-@asset
-def get_s3_data():
-    # Use your op logic from week 3
-    pass
+@asset(
+    group_name="corise",
+    config_schema={"s3_key": str},
+    required_resource_keys={"s3"},
+    op_tags={"kind": "s3"},
+    description="Get a list of stocks from an S3 file",
+)
+def get_s3_data(context)-> List[Stock]:
+    output = list()
+    for row in context.resources.s3.get_data(context.op_config["s3_key"]):
+        print(row)
+        stock = Stock.from_list(row)
+        output.append(stock)
+    return output
 
 
 @asset
